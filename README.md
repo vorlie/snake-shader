@@ -26,6 +26,18 @@ Snake Shader is a modern take on the classic Snake game, built using **Pygame** 
 
 </details>
 
+## 💻 Performance Notes
+
+The game is designed to run efficiently on modern hardware, leveraging GPU acceleration for all graphical effects.
+
+| Component | Development System Specs |
+| :--- | :--- |
+| **CPU** | AMD Ryzen 5 3600 | 
+| **GPU** | AMD Radeon RX 7600 OC (8GB VRAM) |
+| **RAM** | 16 GB | 
+
+*Performance is optimized for 1920x1080 resolution with all post-processing features enabled on the above hardware.*
+
 ## 🚀 Getting Started
 
 To run Snake Shader, you need Python and the required libraries (Pygame, ModernGL, etc.). It's strongly recommended to use a virtual environment.
