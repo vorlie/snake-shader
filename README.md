@@ -32,7 +32,7 @@ To run Snake Shader, you need Python and the required libraries (Pygame, ModernG
 
 1. Clone the repository:
     ```
-    git clone [https://your-repo-link.git](https://your-repo-link.git)
+    git clone [https://github.com/vorlie/snake.git](https://github.com/vorlie/snake.git)
     cd snake-shader
     ```
 
