@@ -22,7 +22,7 @@ class Renderer:
         self.padding = padding
         self.screen_size = screen_size
 
-        shader_dir = Path(__file__).resolve().parent / "shaders"
+        self.shader_dir = Path(__file__).resolve().parent / "shaders"
         renderer_dir = Path(__file__).resolve().parent
         fonts_dir = renderer_dir / "fonts"
         custom_font_path_obj = fonts_dir / "PixelifySans.ttf"
@@ -36,8 +36,8 @@ class Renderer:
                 None
             )
         # ---- main instanced program (quad.vert / quad.frag) ----
-        vert_src = (shader_dir / "quad.vert").read_text()
-        frag_src = (shader_dir / "quad.frag").read_text()
+        vert_src = (self.shader_dir / "quad.vert").read_text()
+        frag_src = (self.shader_dir / "quad.frag").read_text()
         self.prog = ctx.program(vertex_shader=vert_src, fragment_shader=frag_src)
 
         # instanced quad
@@ -74,20 +74,20 @@ class Renderer:
             self.prog["u_screen"].value = (self.screen_size[0], self.screen_size[1])
 
         # ---- fullscreen helper shaders ----
-        overlay_vert = (shader_dir / "overlay.vert").read_text()
-        overlay_frag = (shader_dir / "overlay.frag").read_text()
+        overlay_vert = (self.shader_dir / "overlay.vert").read_text()
+        overlay_frag = (self.shader_dir / "overlay.frag").read_text()
         self.overlay_prog = ctx.program(
             vertex_shader=overlay_vert, fragment_shader=overlay_frag
         )
 
-        passthrough_frag = (shader_dir / "passthrough.frag").read_text()
+        passthrough_frag = (self.shader_dir / "passthrough.frag").read_text()
         self.blit_prog = ctx.program(
             vertex_shader=overlay_vert, fragment_shader=passthrough_frag
         )
 
         # text shader
-        text_vert = (shader_dir / "text.vert").read_text()
-        text_frag = (shader_dir / "text.frag").read_text()
+        text_vert = (self.shader_dir / "text.vert").read_text()
+        text_frag = (self.shader_dir / "text.frag").read_text()
         self.text_prog = ctx.program(vertex_shader=text_vert, fragment_shader=text_frag)
 
         # fullscreen VBO/VAOs
@@ -112,7 +112,7 @@ class Renderer:
 
         # ---- postprocess: compile Kawase blur & bright-pass & composite inline ----
         # Bright-pass (threshold before blur)
-        bright_frag = (shader_dir / "brightpass.frag").read_text()
+        bright_frag = (self.shader_dir / "brightpass.frag").read_text()
         self.bright_prog = ctx.program(
             vertex_shader=overlay_vert, fragment_shader=bright_frag
         )
@@ -121,7 +121,7 @@ class Renderer:
         )
 
         # Kawase blur fragment (cheap multi-pass)
-        kawase_frag = (shader_dir / "kawase.frag").read_text()
+        kawase_frag = (self.shader_dir / "kawase.frag").read_text()
         self.kawase_prog = ctx.program(
             vertex_shader=overlay_vert, fragment_shader=kawase_frag
         )
@@ -130,7 +130,7 @@ class Renderer:
         )
 
         # Composite with optional dirt map and ACES-ish tonemap + exposure
-        composite_frag = (shader_dir / "composite.frag").read_text()
+        composite_frag = (self.shader_dir / "composite.frag").read_text()
         self.composite_prog = ctx.program(
             vertex_shader=overlay_vert, fragment_shader=composite_frag
         )
@@ -140,7 +140,7 @@ class Renderer:
 
         # fallback gaussian blur program
         try:
-            blur_frag_text = (shader_dir / "blur.frag").read_text()
+            blur_frag_text = (self.shader_dir / "blur.frag").read_text()
             self.gaussian_prog = ctx.program(
                 vertex_shader=overlay_vert, fragment_shader=blur_frag_text
             )
@@ -151,7 +151,7 @@ class Renderer:
             self.gaussian_prog = None
             self.full_vao_gaussian = None
         # chromatic aberration program
-        chroma_frag = (shader_dir / "chroma_aberration.frag").read_text()
+        chroma_frag = (self.shader_dir / "chroma_aberration.frag").read_text()
         self.chroma_prog = ctx.program(
             vertex_shader=overlay_vert, fragment_shader=chroma_frag
         )
@@ -750,33 +750,11 @@ class Renderer:
 
         # lazy-create the vignette program once
         if not hasattr(self, "_vignette_prog"):
+            vignette_frag = (self.shader_dir / "vignette.frag").read_text()
+            vignette_vert = (self.shader_dir / "vignette.vert").read_text()
             self._vignette_prog = self.ctx.program(
-                vertex_shader="""
-                    #version 330
-                    in vec2 in_pos;
-                    out vec2 v_uv;
-                    void main() {
-                        v_uv = (in_pos + 1.0) * 0.5;
-                        gl_Position = vec4(in_pos, 0.0, 1.0);
-                    }
-                """,
-                fragment_shader="""
-                    #version 330
-                    in vec2 v_uv;
-                    out vec4 f_color;
-                    uniform float intensity;
-
-                    void main() {
-                        // center UV 0.5,0.5
-                        float d = distance(v_uv, vec2(0.5, 0.5));
-
-                        // smooth falloff
-                        float vig = smoothstep(0.4, 0.85, d);
-
-                        float dark = vig * intensity;
-                        f_color = vec4(0.0, 0.0, 0.0, dark);
-                    }
-                """,
+                vertex_shader=vignette_vert,
+                fragment_shader=vignette_frag,
             )
 
             # full-screen quad (two triangles)
@@ -811,78 +789,11 @@ class Renderer:
         """
 
         if not hasattr(self, "_rect_prog"):
+            rect_vert = (self.shader_dir / "rect.vert").read_text()
+            rect_frag = (self.shader_dir / "rect.frag").read_text()
             self._rect_prog = self.ctx.program(
-                vertex_shader="""
-                    #version 330
-                    in vec2 in_pos;
-                    in vec2 in_uv;
-
-                    out vec2 v_uv; // Normalized UV (0..1)
-                    out vec2 v_local_pos; // Local pixel position (0..size)
-
-                    uniform vec2 u_screen;
-                    uniform vec2 u_rect_pos; // Pixel coordinates of the top-left corner
-                    uniform vec2 u_rect_size; // Pixel size of the rectangle
-
-                    void main() {
-                        v_uv = in_uv;
-                        
-                        // Calculate local pixel position: (in_pos - u_rect_pos)
-                        // Note: in_pos is already derived from the quad array (x, y, x+w, y+h)
-                        v_local_pos = vec2(in_pos.x - u_rect_pos.x, u_rect_pos.y + u_rect_size.y - in_pos.y);
-                        
-                        // Convert from pixel coords to clip space
-                        vec2 p = (in_pos / u_screen) * 2.0 - 1.0;
-                        gl_Position = vec4(p.x, -p.y, 0.0, 1.0); // flip Y
-                    }
-                """,
-                fragment_shader="""
-                    #version 330
-                    in vec2 v_uv;
-                    in vec2 v_local_pos;
-                    out vec4 f_color;
-
-                    uniform vec4 u_color;
-                    uniform vec2 u_rect_size;
-                    uniform float u_radius;
-
-                    void main() {
-                        // If radius is 0, just draw the whole quad (optimization)
-                        if (u_radius <= 0.0) {
-                            f_color = u_color;
-                            return;
-                        }
-                        
-                        // Define the corner bounding boxes (rect size minus radius on both sides)
-                        vec2 half_size = u_rect_size * 0.5;
-                        vec2 box_size = u_rect_size - u_radius * 2.0;
-
-                        // P is the current pixel position relative to the center of the rectangle
-                        vec2 P = v_local_pos - half_size;
-
-                        // Q is the distance from the center of the rectangle to the edges
-                        // We use max(abs(P) - box_size * 0.5, 0.0) to find the distance
-                        // only outside the inner rounded box.
-                        vec2 Q = abs(P) - half_size + u_radius;
-
-                        // If Q.x < 0 or Q.y < 0, the pixel is in the central, non-rounded area.
-                        // If both are > 0, we are in a corner area.
-                        
-                        // Distance (d) from the pixel P to the rounded box's edge
-                        float d = length(max(Q, 0.0)) + min(max(Q.x, Q.y), 0.0);
-
-                        // If the distance (d) is greater than the radius, the pixel is outside the rounded shape.
-                        if (d > u_radius) {
-                            discard;
-                        }
-
-                        // Optional: Smooth blending for anti-aliasing (smooth step from radius to radius + 1)
-                        // float alpha = 1.0 - smoothstep(u_radius, u_radius + 1.0, d);
-                        // f_color = vec4(u_color.rgb, u_color.a * alpha);
-                        
-                        f_color = u_color;
-                    }
-                """,
+                vertex_shader=rect_vert,
+                fragment_shader=rect_frag,
             )
 
             # VBO holds pos.xy, uv.xy for a quad
