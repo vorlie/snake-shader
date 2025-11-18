@@ -1,108 +1,78 @@
-# 🐍 Snake Shader: A Pygame/ModernGL Retrowave Arcade
+# Snake Shader 🐍✨
 
-## ✨ Overview
+Welcome to **Snake Shader**, a high-performance, retro-futuristic reimplementation of the classic Snake game. We've ditched the basic 2D grids for a fully GPU-accelerated experience using **ModernGL** and **Pygame**.
 
-Snake Shader is a modern take on the classic Snake game, built using **Pygame** for input/window handling and **ModernGL** for GPU-accelerated graphics. It features custom shaders, post-processing effects like Bloom and Chromatic Aberration, and a fully customizable color theme system, transforming the simple arcade experience into a visually dynamic spectacle.
+Think neon lights, smooth animations, and shader effects that make your eyes happy.
 
-## 🌟 Key Features
+## Why is this cool?
 
-- **GPU-Accelerated Rendering:** Uses ModernGL to render all game elements (grid, snake, apple, UI) via custom shaders for high-performance visuals.
-- **Custom Post-Processing:** Includes advanced graphical effects such as:
-    - **Bloom:** Enhances light sources and adds a vibrant glow.
-    - **Kawase Bloom:** An alternative bloom technique for smoother results.
-    - **Chromatic Aberration:** Adds a subtle retro distortion effect, spiking on game events.
-- **Customizable Theme System:** Easily switch between different color palettes (Classic Green, Cyberpunk, Monochrome) via the Settings menu.
-- **Persistent Settings:** Saves high score, themes, and graphics settings (`vsync`, `resolution`, `bloom strength`) to a local `settings.json` file.
-- **Fluid Gameplay:** Utilizes a fixed time-step game loop for reliable physics and smooth rendering.
-- **Font:** Uses a `PixelifySans` TTF font for a unique UI look and feel.
+Most Snake games just move a square on a screen. This one uses:
+- **Custom Shaders**: Everything you see is rendered via OpenGL shaders.
+- **Post-Processing**: We've got Bloom (glow), Chromatic Aberration (retro glitch), and Vignette effects.
+- **Dynamic Audio**: Sound effects and background music that fit the vibe.
+- **Controller Support**: Play with your keyboard or your favorite gamepad.
 
-## 📷 Screenshots
-<details>
-<summary>View Screenshots</summary>
+## 🛠️ Under the Hood
 
-| Main Menu | Settings Menu | Gameplay Scene |
-|:---:|:---:|:---:|
-| ![Main Menu](images/MainMenu.png) | ![Settings Menu](images/SettingsMenu.png) | ![Gameplay Scene](images/GameplayScene.png) |
+We recently refactored the codebase to be clean, modular, and easy to extend. Here's how it's organized:
 
-</details>
-
-## 💻 Performance Notes
-
-The game is designed to run efficiently on modern hardware, leveraging GPU acceleration for all graphical effects.
-
-| Component | Development System Specs |
-| :--- | :--- |
-| **CPU** | AMD Ryzen 5 3600 | 
-| **GPU** | AMD Radeon RX 7600 OC (8GB VRAM) |
-| **RAM** | 16 GB | 
-
-*Performance is optimized for 1920x1080 resolution with all post-processing features enabled on the above hardware.*
+- **`main.py`**: The entry point. Short and sweet.
+- **`src/app.py`**: The brain of the operation. Manages the game loop and states.
+- **`src/renderer.py`**: The artist. Handles all the OpenGL magic and post-processing.
+- **`src/shaders/`**: The secret sauce. GLSL shader files for that visual punch.
+- **`src/input_handler.py`**: The translator. Converts keyboard and controller presses into game actions.
+- **`src/audio_manager.py`**: The DJ. Handles sound effects and music.
+- **`src/config.py`**: The rulebook. Centralized settings and constants.
 
 ## 🚀 Getting Started
 
-To run Snake Shader, you need Python and the required libraries (Pygame, ModernGL, etc.). It's strongly recommended to use a virtual environment.
-
 ### Prerequisites
-- Python 3.13+
-- The project dependencies (listed in requirements.txt):
-    ```
-    pip install pygame moderngl numpy
-    ```
+You'll need **Python 3.13+**. We recommend using a virtual environment.
 
+### Installation
 
-### Installation and Setup
-
-1. Clone the repository:
-    ```
-    git clone https://github.com/vorlie/snake.git
+1.  **Clone the repo:**
+    ```bash
+    git clone https://github.com/vorlie/snake-shader.git
     cd snake-shader
     ```
 
-2. Create and activate a virtual environment:
-    ```
-    # Linux/macOS
+2.  **Set up your environment:**
+    ```bash
+    # Using uv (recommended)
+    uv venv
+    source .venv/bin/activate
+    uv pip install -r requirements.txt
+    
+    # Or standard pip
     python3 -m venv .venv
     source .venv/bin/activate
-
-    # Windows
-    python -m venv .venv
-    .\.venv\Scripts\activate
-    ```
-
-3. Install dependencies:
-    ```
     pip install -r requirements.txt
     ```
-4. Run the game:
-    ```
+
+3.  **Run it:**
+    ```bash
     python main.py
+    # or with uv
+    uv run main.py
     ```
 
-## 🎮 Controls Table Markdown
+## 🎮 Controls
 
-| Action | Key(s) | Notes | 
- | ----- | ----- | ----- | 
-| **Movement** | `ARROW KEYS` / `Analog Stick` / `D-Pad` | Standard up, down, left, right movement. | 
-| **Menu Select/Action** | `ENTER` / `A (Xbox)` / `X (PS)` | Confirm menu selection or change settings values. | 
-| **Menu Navigation** | `UP` / `DOWN` / `Analog Stick` / `D-Pad` | Navigate through menu and settings options. | 
-| **Settings Adjust** | `LEFT` / `RIGHT` / `Analog Stick` / `D-Pad` | Change values for theme, resolution, and effect settings. | 
-| **Pause/Menu** | `ESC`  / `B/Menu (Xbox)` / `O/Options (PS)` | Exit game state back to the main menu. | 
-| **Retry (Game Over)** | `R` | Quickly restart the game after death. | 
-| **Toggle Debug Overlay** | `D` | Show/Hide input and state debug information in the bottom left. |
+| Action | Keyboard | Controller |
+| :--- | :--- | :--- |
+| **Move** | Arrow Keys | D-Pad / Left Stick |
+| **Select / Confirm** | Enter | A / Cross |
+| **Back / Pause** | Esc | B / Circle / Start |
+| **Debug Info** | D | - |
+| **Reset (Game Over)** | R | A / Cross |
 
-## ⚙️ Configuration & Settings Table Markdown
+## ⚙️ Customization
 
-| Setting | Type | Description | 
- | ----- | ----- | ----- | 
-| **Resolution** | Cycle | Currently supported: 1920x1080 | 
-| **Fullscreen** | Toggle | Switch between windowed and full-screen modes. | 
-| **VSync** | Toggle | Synchronizes frame rate with display refresh rate. | 
-| **Shake on Death** | Toggle | Enables screen shake effect when the snake dies. | 
-| **Color Theme** | Cycle | Choose from predefined color palettes (e.g., Cyberpunk, Classic). | 
-| **Bloom** | Toggle | Enables or disables the core light glowing effect. | 
-| **Kawase Bloom** | Toggle | Uses the Kawase blur technique for Bloom (better performance). | 
-| **Chroma Aberr.** | Toggle | Enables or disables the chromatic aberration effect. | 
-| **Bloom Strength** | Adjustable (Arrows) | Adjusts the overall intensity of the Bloom effect. | 
-| **Bloom Radius** | Adjustable (Arrows) | Controls the size/spread of the Bloom effect. | 
-| **Chroma Amount** | Adjustable (Arrows) | Adjusts the strength of the chromatic distortion. | 
-| **Chroma Falloff** | Adjustable (Arrows) | Controls the bias/direction of the chromatic effect. |
+Check out the **Settings** menu to tweak the experience:
+- **Themes**: Switch between "Classic Green", "Cyberpunk", and "Monochrome".
+- **Graphics**: Toggle Bloom, V-Sync, and Fullscreen.
+- **Effects**: Adjust Bloom intensity and Chromatic Aberration levels to your liking.
+
+---
+*Built with ❤️, Python, and a lot of shaders.*
