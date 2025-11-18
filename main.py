@@ -58,7 +58,7 @@ bg_music_path = _base_path / "src" / "audio" / "background-music.mp3"
 screen = pygame.display.set_mode(
     (WINDOW_WIDTH, WINDOW_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF
 )
-pygame.display.set_caption("Snake Shader")
+pygame.display.set_caption("Snake Shader v1.0.0")
 ctx = moderngl.create_context()
 ctx.enable(moderngl.BLEND)
 ctx.blend_func = (moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA)

@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import List, Tuple
 import random
 import numpy as np
@@ -24,7 +25,7 @@ class Renderer:
         shader_dir = Path(__file__).resolve().parent / "shaders"
         renderer_dir = Path(__file__).resolve().parent
         fonts_dir = renderer_dir / "fonts"
-        custom_font_path_obj = fonts_dir / "font.ttf"
+        custom_font_path_obj = fonts_dir / "PixelifySans.ttf"
         self.custom_font_path = custom_font_path_obj
 
         if not self.custom_font_path.exists():
@@ -32,7 +33,7 @@ class Renderer:
                 f"Warning: Custom font not found at {self.custom_font_path}. Falling back to default."
             )
             self.custom_font_path = (
-                None  # Set to None to use SysFont or a simple default
+                None
             )
         # ---- main instanced program (quad.vert / quad.frag) ----
         vert_src = (shader_dir / "quad.vert").read_text()
@@ -189,8 +190,9 @@ class Renderer:
         )
 
         # vertex instance buffer written later
-        self.text_cache = {}
-        self.font_cache = {}
+        self.text_cache = OrderedDict()  # replace existing dict
+        self.font_cache = {}             # already present
+        self.MAX_TEXT_CACHE = 128        # tune this (128 is reasonable)
 
     # ------------------------------
     # Buffer allocation / resize
@@ -632,60 +634,70 @@ class Renderer:
         self.full_vao_overlay.render(mode=moderngl.TRIANGLES)
 
     def _get_font(self, size: int) -> pygame.font.Font:
-        """Helper to cache Pygame font objects by size. (Performance Fix)"""
-        if size not in self.font_cache:
-            if self.custom_font_path:
-                self.font_cache[size] = pygame.font.Font(
-                    str(self.custom_font_path), int(size)
-                )
-            else:
-                self.font_cache[size] = pygame.font.SysFont(None, int(size))
-        return self.font_cache[size]
+        """Cache and normalize font sizes to avoid creating tons of font objects."""
+        size = int(size)  # normalize: 24 and 24.0 become the same key
+        if size in self.font_cache:
+            return self.font_cache[size]
+
+        if self.custom_font_path:
+            self.font_cache[size] = pygame.font.Font(str(self.custom_font_path), int(size))
+        else:
+            self.font_cache[size] = pygame.font.SysFont(None, int(size))
+        font = self.font_cache[size]
+        return font
 
     def draw_text(self, text: str, size: int, color=(255, 255, 255), pos=(400, 400)):
         """
-        Renders text by generating a new Pygame surface and caching the resulting
-        moderngl Texture object to prevent massive performance penalties from
-        repeated GPU uploads.
+        Renders text into a moderngl texture and caches it with an LRU policy.
+        Avoid caching wildly-changing strings (e.g., FPS displayed as "FPS: 123").
         """
+        # normalize inputs
+        size = int(size)
+        # make color a tuple of ints (immutable)
+        color = tuple(int(c) for c in color)
 
-        # 1. Generate a unique key for the cache (text content + color)
+        # cache key
         cache_key = (text, color, size)
 
-        # 2. Check if the text texture is already in the cache
+        # LRU lookup
         if cache_key in self.text_cache:
-            tex, w, h = self.text_cache[cache_key]
+            # move to end = mark as recently used
+            tex, w, h = self.text_cache.pop(cache_key)
+            self.text_cache[cache_key] = (tex, w, h)
         else:
-            # 3. If not cached, render and create the moderngl texture
+            # create new surface/texture
             font = self._get_font(size)
             surf = font.render(text, True, color)
             w, h = surf.get_width(), surf.get_height()
             data = pygame.image.tostring(surf, "RGBA", True)
 
-            # flip rows
+            # flip rows for moderngl
             row_stride = w * 4
             flipped = bytearray()
             for row in range(h):
                 start = (h - 1 - row) * row_stride
                 flipped.extend(data[start : start + row_stride])
 
-            # Create the Moderngl texture
             tex = self.ctx.texture((w, h), 4, bytes(flipped))
             tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
             tex.build_mipmaps()
 
-            # Cache the result
+            # insert into LRU cache
             self.text_cache[cache_key] = (tex, w, h)
 
-        # 4. Draw the cached texture
+            # evict oldest if over limit
+            if len(self.text_cache) > self.MAX_TEXT_CACHE:
+                old_key, (old_tex, _, _) = self.text_cache.popitem(last=False)
+                try:
+                    old_tex.release()
+                except Exception:
+                    pass
+
+        # draw
         if "u_screen" in self.text_prog:
-            self.text_prog["u_screen"].value = (
-                self.screen_size[0],
-                self.screen_size[1],
-            )
+            self.text_prog["u_screen"].value = (self.screen_size[0], self.screen_size[1])
 
         x, y = pos
-        # Vertex data for the quad
         quad = np.array(
             [
                 [x, y + h, 0.0, 1.0],
@@ -703,7 +715,7 @@ class Renderer:
         self.text_vao.render(mode=moderngl.TRIANGLES)
 
     def clear_text_cache(self):
-        """Releases all cached text textures."""
+        """Releases and clears all cached text textures."""
         for tex, _, _ in self.text_cache.values():
             try:
                 tex.release()
