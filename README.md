@@ -63,7 +63,7 @@ You'll need **Python 3.13+**. We recommend using a virtual environment.
 | :--- | :--- | :--- |
 | **Move** | Arrow Keys | D-Pad / Left Stick |
 | **Select / Confirm** | Enter | A / Cross |
-| **Back / Pause** | Esc | B / Circle / Start |
+| **Back / Pause** | Esc | B / Circle |
 | **Debug Info** | D | - |
 | **Reset (Game Over)** | R | A / Cross |
 
