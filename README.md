@@ -1,6 +1,6 @@
 # Snake Shader 🐍✨
 
-Welcome to **Snake Shader**, a high-performance, retro-futuristic reimplementation of the classic Snake game. We've ditched the basic 2D grids for a fully GPU-accelerated experience using **ModernGL** and **Pygame**.
+Welcome to **Snake Shader**, a high-performance, retro-futuristic reimplementation of the classic Snake game. I've ditched the basic 2D grids for a fully GPU-accelerated experience using **ModernGL** and **Pygame**.
 
 Think neon lights, smooth animations, and shader effects that make your eyes happy.
 
@@ -8,16 +8,17 @@ Think neon lights, smooth animations, and shader effects that make your eyes hap
 
 Most Snake games just move a square on a screen. This one uses:
 - **Custom Shaders**: Everything you see is rendered via OpenGL shaders.
-- **Post-Processing**: We've got Bloom (glow), Chromatic Aberration (retro glitch), and Vignette effects.
+- **Post-Processing**: I've added Bloom (glow), Chromatic Aberration (retro glitch), and Vignette effects.
 - **Dynamic Audio**: Sound effects and background music that fit the vibe.
 - **Controller Support**: Play with your keyboard or your favorite gamepad.
 
 ## 🛠️ Under the Hood
 
-We recently refactored the codebase to be clean, modular, and easy to extend. Here's how it's organized:
+I recently refactored the codebase to be clean, modular, and easy to extend. Here's how it's organized:
 
 - **`main.py`**: The entry point. Short and sweet.
 - **`src/app.py`**: The brain of the operation. Manages the game loop and states.
+- **`src/game.py`**: The core logic. Handles the snake's movement, growth, and collision rules.
 - **`src/renderer.py`**: The artist. Handles all the OpenGL magic and post-processing.
 - **`src/shaders/`**: The secret sauce. GLSL shader files for that visual punch.
 - **`src/input_handler.py`**: The translator. Converts keyboard and controller presses into game actions.
@@ -27,7 +28,7 @@ We recently refactored the codebase to be clean, modular, and easy to extend. He
 ## 🚀 Getting Started
 
 ### Prerequisites
-You'll need **Python 3.13+**. We recommend using a virtual environment.
+You'll need **Python 3.13+**. I recommend using a virtual environment.
 
 ### Installation
 
