@@ -65,6 +65,8 @@ class SnakeGameApp:
             ("shake_on_death", "Shake on Death"),
             ("resolution", "Resolution"),
             ("fullscreen", "Fullscreen"),
+            ("music_volume", "Music Volume"),
+            ("sfx_volume", "SFX Volume"),
             ("vsync", "V-Sync"),
             ("bloom", "Bloom"),
             ("use_kawase", "Kawase Bloom"),
@@ -97,6 +99,8 @@ class SnakeGameApp:
         self.preview_snake = Snake(GRID_W, GRID_H)
         
         # Start Music
+        self.audio_manager.set_music_volume(self.settings["music_volume"])
+        self.audio_manager.set_sfx_volume(self.settings["sfx_volume"])
         self.audio_manager.play_music()
 
     def save_game(self):
@@ -264,7 +268,7 @@ class SnakeGameApp:
             key, _ = self.settings_items[self.settings_index]
             
             # Toggles
-            if key in ("vsync", "bloom", "use_kawase", "shake_on_death", "fullscreen", "chroma_enabled", "crt_enabled") and action == "ENTER":
+            if key in ("vsync", "bloom", "use_kawase", "shake_on_death", "fullscreen", "chroma_enabled") and action == "ENTER":
                 self.settings[key] = not self.settings[key]
                 if key in ("vsync", "fullscreen"):
                     self.apply_display_mode()
@@ -297,24 +301,31 @@ class SnakeGameApp:
                 "bloom_radius",
                 "chroma_amount",
                 "chroma_bias",
-                "crt_curvature",
-                "crt_vignette",
+                "music_volume",
+                "sfx_volume",
             ):
                 step = 0.02
                 if key == "bloom_radius":
                     step = 0.1
                 elif key == "chroma_bias":
                     step = 0.05
-                elif key == "crt_vignette":
+                elif key in ("music_volume", "sfx_volume"):
                     step = 0.05
                 
                 cur = self.settings[key]
                 if action == "LEFT":
                     self.settings[key] = max(0.0, cur - step)
                 elif action == "RIGHT":
-                    self.settings[key] = min(2.0, cur + step)
+                    self.settings[key] = min(1.0 if key in ("music_volume", "sfx_volume") else 2.0, cur + step)
                 elif action == "ENTER":
                     self.settings[key] = DEFAULT_SETTINGS[key]
+                
+                # Apply immediate effects
+                if key == "music_volume":
+                    self.audio_manager.set_music_volume(self.settings[key])
+                elif key == "sfx_volume":
+                    self.audio_manager.set_sfx_volume(self.settings[key])
+                    
                 save_settings(self.settings)
 
     def handle_playing_input(self, action):
@@ -538,6 +549,8 @@ class SnakeGameApp:
             
             if key == "color_theme":
                 val = self.settings[key]
+            elif key in ("music_volume", "sfx_volume"):
+                val = f"{int(self.settings[key] * 100)}%"
             else:
                 val = self.settings[key]
                 if isinstance(val, float):

@@ -66,6 +66,8 @@ DEFAULT_SETTINGS = {
     "bloom_radius": 2.0,
     "exposure": 1.0,
     "fullscreen": False,
+    "music_volume": 0.5,
+    "sfx_volume": 0.5,
     "resolution": list(RESOLUTIONS[0]),
     "chroma_enabled": True,
     "chroma_amount": 0.02,

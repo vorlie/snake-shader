@@ -588,7 +588,6 @@ class Renderer:
                 self.chroma_prog["u_resolution"].value = self.screen_size
 
             self.full_vao_chroma.render()
-
         else:
             # Final Blit (Composite result to screen, if CA is disabled)
             self.ctx.screen.use()

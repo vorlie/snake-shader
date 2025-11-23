@@ -9,6 +9,7 @@ class AudioManager:
             self.base_path / "audio",
             self.base_path / "src" / "audio",
         ]
+        self.sfx_volume = 0.5 # Initialize sfx_volume
         self._init_mixer()
         self._load_assets()
 
@@ -42,15 +43,34 @@ class AudioManager:
         
         self.bg_music_path = self.base_path / "src" / "audio" / "background-music.mp3"
 
-    def play_sound(self, name):
-        if name in self.sounds and self.sounds[name]:
-            self.sounds[name].play()
-
-    def play_music(self, volume=0.5):
+    def play_music(self):
+        if not pygame.mixer.get_init():
+            return
         try:
             if self.bg_music_path.exists():
                 pygame.mixer.music.load(str(self.bg_music_path))
-                pygame.mixer.music.set_volume(volume)
                 pygame.mixer.music.play(-1)
+                pygame.mixer.music.set_volume(0.5)
         except Exception as e:
-            print("Failed to load BG music:", e)
+            print(f"Error playing music: {e}")
+
+    def set_music_volume(self, volume):
+        if not pygame.mixer.get_init():
+            return
+        try:
+            pygame.mixer.music.set_volume(volume)
+        except Exception:
+            pass
+
+    def set_sfx_volume(self, volume):
+        self.sfx_volume = volume
+
+    def play_sound(self, name):
+        if not pygame.mixer.get_init():
+            return
+        if name in self.sounds and self.sounds[name]:
+            try:
+                self.sounds[name].set_volume(getattr(self, "sfx_volume", 0.5))
+                self.sounds[name].play()
+            except Exception:
+                pass
