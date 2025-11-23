@@ -133,7 +133,7 @@ class SnakeGameApp:
             flags |= pygame.FULLSCREEN
             
         self.screen = pygame.display.set_mode(self.settings["resolution"], flags)
-        pygame.display.set_caption("Snake Shader v1.1.1")
+        pygame.display.set_caption("Snake Shader v1.1.2")
         
         self.ctx = moderngl.create_context()
         self.ctx.enable(moderngl.BLEND)
